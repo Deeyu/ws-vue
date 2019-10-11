@@ -2,7 +2,7 @@
  * @Author: Daiyu
  * @Date: 2019-10-10 16:29:54
  * @Last Modified by: Daiyu
- * @Last Modified time: 2019-10-10 17:47:06
+ * @Last Modified time: 2019-10-11 14:10:57
  */
 
 const path = require('path')
@@ -63,6 +63,33 @@ module.exports = {
     // if(process.env.NODE_ENV === 'production') { // 为生产环境修改配置...process.env.NODE_ENV !== 'development'
     // } else { // 为开发环境修改配置...
     // }
+    // Webpack包文件分析器(https://github.com/webpack-contrib/webpack-bundle-analyzer)
+    // 打包分析
+    if (process.env.IS_ANALYZ) {
+      config.plugin('webpack-report').use(BundleAnalyzerPlugin, [
+        {
+          analyzerMode: 'static'
+        }
+      ])
+    }
+    const cdn = {
+      // 访问https://unpkg.com/element-ui/lib/theme-chalk/index.css获取最新版本
+      css: ['//unpkg.com/element-ui@2.10.1/lib/theme-chalk/index.css'],
+      js: [
+        '//unpkg.com/vue@2.6.10/dist/vue.min.js', // 访问https://unpkg.com/vue/dist/vue.min.js获取最新版本
+        '//unpkg.com/vue-router@3.0.6/dist/vue-router.min.js',
+        '//unpkg.com/vuex@3.1.1/dist/vuex.min.js',
+        '//unpkg.com/axios@0.19.0/dist/axios.min.js',
+        '//unpkg.com/element-ui@2.10.1/lib/index.js'
+      ]
+    }
+
+    // html中添加cdn
+    // config.plugin('html').tap(args => {
+    //   args[0].cdn = cdn
+    //   return args
+    // })
+    return config
   },
   //调整 webpack 配置 https://cli.vuejs.org/zh/guide/webpack.html#%E7%AE%80%E5%8D%95%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F
   configureWebpack: config => {
@@ -75,8 +102,8 @@ module.exports = {
         algorithm: 'gzip',
         test: productionGzipExtensions,
         threshold: 8192,
-        minRatio: 0.8,
-      }),
+        minRatio: 0.8
+      })
       // new CompressionPlugin({
       //   algorithm(input, compressionOptions, callback) {
       //     return zopfli.gzip(input, compressionOptions, callback)
@@ -90,28 +117,74 @@ module.exports = {
       // new BrotliPlugin({
       //   test: productionGzipExtensions,
       //   minRatio: 0.8,
-      // }),
-      // Webpack包文件分析器(https://github.com/webpack-contrib/webpack-bundle-analyzer)
-      new BundleAnalyzerPlugin(),
+      // })
     ]
     //开发环境
     let pluginsDev = [
       //移动端模拟开发者工具(https://github.com/diamont1001/vconsole-webpack-plugin  https://github.com/Tencent/vConsole)
       new vConsolePlugin({
         filter: [], // 需要过滤的入口文件
-        enable: process.env.NODE_ENV !== 'production', // 发布代码前记得改回 false
-      }),
+        enable: process.env.NODE_ENV !== 'production' // 发布代码前记得改回 false
+      })
     ]
+    // 配置externals引入cdn资源
+    // 防止将某些 import 的包(package)打包到 bundle 中，而是在运行时(runtime)再去从外部获取这些扩展依赖
+    config.externals = {
+      vue: 'Vue',
+      'vue-router': 'VueRouter',
+      vuex: 'vuex',
+      axios: 'axios',
+      'element-ui': 'ELEMENT'
+    }
+    // 利用splitChunks单独打包第三方模块
+    config.optimization = {
+      splitChunks: {
+        // chunks: 表示哪些代码需要优化，有三个可选值：initial(初始块)、async(按需加载块)、all(全部块)，默认为async
+        chunks: 'all',
+        // // 表示在压缩前的最小模块大小，默认为30000
+        // minSize: 30000,
+        // // 表示被引用次数，默认为1
+        // minChunks: 1,
+        // // 按需加载时候最大的并行请求数，默认为5
+        // maxAsyncRequests: 5,
+        // // 一个入口最大的并行请求数，默认为3
+        // maxInitialRequests: 3,
+        // // 命名连接符
+        // automaticNameDelimiter: '~',
+        // // 拆分出来块的名字，默认由块名和hash值自动生成
+        // name: true,
+        cacheGroups: {
+          libs: {
+            name: 'chunk-libs',
+            test: /[\\/]node_modules[\\/]/,
+            priority: 10,
+            chunks: 'initial'
+          },
+          elementUI: {
+            name: 'chunk-elementUI',
+            priority: 20,
+            test: /[\\/]node_modules[\\/]element-ui[\\/]/,
+            chunks: 'all'
+          },
+          antdUI: {
+            name: 'chunk-antdUI',
+            priority: 20,
+            test: /[\\/]node_modules[\\/]ant-design-vue[\\/]/,
+            chunks: 'all'
+          },
+          commons: {
+            name: 'chunk-commons',
+            test: resolve('src/components'), // can customize your rules
+            minChunks: 3, //  minimum common number
+            priority: 5,
+            reuseExistingChunk: true
+          }
+        }
+      }
+    }
     if (process.env.NODE_ENV === 'production') {
       // 为生产环境修改配置...process.env.NODE_ENV !== 'development'
       //			config.entry.app = ['babel-polyfill', './src/main.js'];
-      // 防止将某些 import 的包(package)打包到 bundle 中，而是在运行时(runtime)再去从外部获取这些扩展依赖
-      config.externals = {
-        vue: 'Vue',
-        'vue-router': 'VueRouter',
-        iview: 'iview',
-        vuex: 'vuex',
-      }
       config.plugins = [...config.plugins, ...pluginsPro]
     } else {
       // 为开发环境修改配置...
@@ -129,15 +202,12 @@ module.exports = {
     loaderOptions: {
       sass: {
         //设置css中引用文件的路径，引入通用使用的scss文件（如包含的@mixin）
-        data: `
-				$baseUrl: "/";
-				@import '@/assets/scss/_common.scss';
-				`,
-        //				data: `
-        //				$baseUrl: "/";
-        //				`
-      },
-    },
+        // data: `
+        // $baseUrl: "/";
+        // @import '@/assets/scss/_common.scss';
+        // `,
+      }
+    }
   },
   // webpack-dev-server 相关配置 https://webpack.js.org/configuration/dev-server/
   devServer: {
@@ -157,15 +227,15 @@ module.exports = {
         // ws: true,//websocket支持
         secure: false,
         pathRewrite: {
-          '^/api': '/',
-        },
-      },
+          '^/api': '/'
+        }
+      }
       // "/x/*": {
       //   target: "http://XXX.XXX.X.XX:2018",
       //   changeOrigin: true,
       //   secure: false
       // }
-    },
+    }
   },
 
   // 第三方插件配置 https://www.npmjs.com/package/vue-cli-plugin-style-resources-loader
@@ -175,8 +245,8 @@ module.exports = {
       preProcessor: 'scss', //声明类型
       patterns: [
         //				path.resolve(__dirname, './src/assets/scss/_common.scss'),
-      ],
+      ]
       //			injector: 'append'
-    },
-  },
+    }
+  }
 }

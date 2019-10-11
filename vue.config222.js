@@ -290,8 +290,8 @@ module.exports = {
     if (process.env.IS_ANALYZ) {
       config.plugin('webpack-report').use(BundleAnalyzerPlugin, [
         {
-          analyzerMode: 'static',
-        },
+          analyzerMode: 'static'
+        }
       ])
     }
     if (IS_PROD) {
@@ -312,9 +312,9 @@ module.exports = {
         @import "@scss/mixins.scss";
         @import "@scss/utils.scss";
         $src: "${process.env.VUE_APP_OSS_SRC}";
-        `,
-      },
-    },
+        `
+      }
+    }
   },
   transpileDependencies: [],
   lintOnSave: false,
@@ -340,9 +340,9 @@ module.exports = {
         changeOrigin: true, // 开启代理，在本地创建一个虚拟服务端
         // ws: true, // 是否启用websockets
         pathRewrite: {
-          '^/api': '/',
-        },
-      },
-    },
-  },
+          '^/api': '/'
+        }
+      }
+    }
+  }
 }

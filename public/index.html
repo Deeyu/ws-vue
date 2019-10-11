@@ -15,5 +15,17 @@
     </noscript>
     <div id="app"></div>
     <!-- built files will be auto injected -->
+    <!-- 使用CDN的CSS文件 -->
+    <!-- <% for (var i in htmlWebpackPlugin.options.cdn &&
+    htmlWebpackPlugin.options.cdn.css) { %>
+    <link rel="stylesheet" href="<%= htmlWebpackPlugin.options.cdn.css[i] %>" />
+    <% } %>
+    <% for (var i in htmlWebpackPlugin.options.cdn &&
+    htmlWebpackPlugin.options.cdn.js) { %>
+    <script
+      type="text/javascript"
+      src="<%= htmlWebpackPlugin.options.cdn.js[i] %>"
+    ></script>
+    <% } %> -->
   </body>
 </html>
