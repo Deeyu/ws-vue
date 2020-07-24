@@ -2,11 +2,11 @@
  * @Author: Daiyu
  * @Date: 2019-10-10 16:29:54
  * @Last Modified by: Daiyu
- * @Last Modified time: 2019-10-11 15:15:33
+ * @Last Modified time: 2020-07-24 16:38:11
  */
 
 const path = require('path')
-// const vConsolePlugin = require('vconsole-webpack-plugin') // 引入 移动端模拟开发者工具 插件 （另：https://github.com/liriliri/eruda）
+const vConsolePlugin = require('vconsole-webpack-plugin') // 引入 移动端模拟开发者工具 插件 （另：https://github.com/liriliri/eruda）
 const CompressionPlugin = require('compression-webpack-plugin') //Gzip
 const zopfli = require('@gfx/zopfli') //zopfli压缩
 const BrotliPlugin = require('brotli-webpack-plugin') //brotli压缩
@@ -122,10 +122,10 @@ module.exports = {
     //开发环境
     let pluginsDev = [
       //移动端模拟开发者工具(https://github.com/diamont1001/vconsole-webpack-plugin  https://github.com/Tencent/vConsole)
-      // new vConsolePlugin({
-      //   filter: [], // 需要过滤的入口文件
-      //   enable: process.env.NODE_ENV !== 'production' // 发布代码前记得改回 false
-      // })
+      new vConsolePlugin({
+        filter: [], // 需要过滤的入口文件
+        enable: process.env.NODE_ENV !== 'production' // 发布代码前记得改回 false
+      })
     ]
     // 配置externals引入cdn资源
     // 防止将某些 import 的包(package)打包到 bundle 中，而是在运行时(runtime)再去从外部获取这些扩展依赖
